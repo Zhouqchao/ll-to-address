@@ -1,0 +1,23 @@
+sudo: false
+language: node_js
+cache:
+  directories:
+  - node_modules
+node_js: 14
+branches:
+  only:
+  - master
+notifications:
+  email: false
+script:
+- npm run build
+before_install:
+- openssl aes-256-cbc -K $encrypted_237d4c0401e5_key -iv $encrypted_237d4c0401e5_iv
+  -in id_rsa.enc -out ~/.ssh/id_rsa -d
+# 添加 SSH 信任列表
+addons:
+  ssh_known_hosts: 111.229.176.98
+# 执行部署脚本
+after_success:
+  - rm -rf root@111.229.176.98:/root/websites/works/ll-to-address/*
+  - scp -o stricthostkeychecking=no -r ./dist/* root@111.229.176.98:/root/websites/works/ll-to-address
