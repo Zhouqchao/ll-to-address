@@ -5,6 +5,7 @@ module.exports = {
   },
   globals: {
     BMapGL: 'readonly',
+    AMap: 'readonly',
     _: 'readonly',
   },
   extends: ['plugin:vue/essential', 'eslint:recommended', '@vue/prettier'],

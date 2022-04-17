@@ -2,47 +2,47 @@
   <div class="home">
     <div class="home__header">
       <h1 class="home__title">经纬度 <i class="el-icon-right"></i> 地址</h1>
-      <el-tooltip
-        class="home__title-icon"
-        effect="dark"
-        content="参考百度"
-        placement="right"
-      >
-        <div slot="content">
-          <el-link
-            type="primary"
-            href="https://lbs.baidu.com/index.php?title=jspopularGL/guide/geocoding"
-            target="_blank"
-            >根据百度地图逆地址解析API开发</el-link
-          >
-        </div>
-        <i class="el-icon-warning-outline"></i>
-      </el-tooltip>
     </div>
     <div class="home__content">
       <el-form
+        class="form"
         ref="form"
         :model="form"
         :rules="formRules"
-        status-icon
         label-width="100px"
       >
-        <el-form-item label="经纬度：" prop="inputStr">
-          <div class="flex">
-            <el-input
-              type="textarea"
-              :autosize="{ minRows: 10, maxRows: 20 }"
-              v-model.trim="form.inputStr"
-              placeholder="每个地址的经纬度占一行，格式：经度,纬度
+        <el-form-item label="经纬度：" prop="inputStr" class="form__input">
+          <el-input
+            type="textarea"
+            :autosize="{ minRows: 8, maxRows: 12 }"
+            v-model.trim="form.inputStr"
+            placeholder="每个地址的经纬度占一行，格式：经度,纬度
 例如：116.43213,38.76623"
-            ></el-input>
-            <el-button
-              type="primary"
-              class="btn"
-              :loading="isLoading"
-              @click="submit"
-              >转换</el-button
-            >
+          ></el-input>
+        </el-form-item>
+        <el-form-item label="转换器：" prop="parser" class="form__select">
+          <div class="flex">
+            <el-select v-model="form.parser" placeholder="请选择转换器">
+              <el-option
+                v-for="parser in parsers"
+                :key="parser.value"
+                :label="parser.label"
+                :value="parser.value"
+                style="display: flex; align-items: center"
+              >
+                <img style="width: 14px; height: 14px" :src="parser.icon" />
+                <span style="margin-left: 6px">{{ parser.label }}</span>
+              </el-option>
+            </el-select>
+            <div class="btn__wrapper">
+              <el-button
+                type="primary"
+                class="btn"
+                :loading="isLoading"
+                @click="submit"
+                >转换
+              </el-button>
+            </div>
           </div>
         </el-form-item>
       </el-form>
@@ -62,18 +62,20 @@
           <el-input
             class="output__textarea"
             type="textarea"
-            :autosize="{ minRows: 10, maxRows: 20 }"
+            :autosize="{ minRows: 8, maxRows: 12 }"
             :value="addressListStr"
             readonly
           ></el-input>
-          <el-button
-            type="primary"
-            class="btn"
-            id="btn-copy"
-            data-clipboard-target=".output__textarea textarea"
-          >
-            复制
-          </el-button>
+          <div class="btn__wrapper">
+            <el-button
+              type="primary"
+              class="btn"
+              id="btn-copy"
+              data-clipboard-target=".output__textarea textarea"
+            >
+              复制
+            </el-button>
+          </div>
         </div>
       </div>
     </div>
@@ -117,6 +119,7 @@ export default {
 
     return {
       form: {
+        parser: 'gaode',
         inputStr: '',
       },
       formRules: {
@@ -131,7 +134,26 @@ export default {
             trigger: ['blur', 'change'],
           },
         ],
+        parser: [
+          {
+            required: true,
+            message: '请选择转换器',
+            trigger: ['blur', 'change'],
+          },
+        ],
       },
+      parsers: [
+        {
+          label: '高德地图',
+          value: 'gaode',
+          icon: require('@/assets/parser-gaode.png'),
+        },
+        {
+          label: '百度地图',
+          value: 'baidu',
+          icon: require('@/assets/parser-baidu.png'),
+        },
+      ],
       addressList: [],
       isLoading: false,
     };
@@ -152,7 +174,8 @@ export default {
       this.initClipboard();
     },
     initBMap() {
-      this.$myGeo = new BMapGL.Geocoder();
+      this.$baiduGeo = new BMapGL.Geocoder({ extensions_town: true });
+      this.$gaodeGeo = new AMap.Geocoder({ radius: 3000 });
     },
     initClipboard() {
       this.$clipboard = new ClipboardJS('#btn-copy');
@@ -165,6 +188,8 @@ export default {
       });
     },
     submit() {
+      this.addressList = [];
+
       this.$refs.form.validate(async (valid) => {
         try {
           if (!valid) return;
@@ -172,14 +197,14 @@ export default {
           this.isLoading = true;
 
           const points = this.form.inputStr.split('\n').map((point) => {
-            const [lat, lng] = point.split(',');
-            return new BMapGL.Point(Number(lat), Number(lng));
+            const [lng, lat] = point.split(',');
+            return { lng, lat };
           });
           const addressList = await this.getAddressList(points);
           this.addressList = addressList;
         } catch (error) {
           console.error(error);
-          this.$message.error('查询失败，请稍后再试');
+          this.$message.error(error.message);
         } finally {
           this.isLoading = false;
         }
@@ -192,14 +217,39 @@ export default {
     },
 
     async getAddress(point) {
-      return new Promise((resolve, reject) => {
-        this.$myGeo.getLocation(point, function (res) {
-          if (res) {
-            resolve(res.address);
-          }
+      const { lng, lat } = point;
 
-          reject(null);
-        });
+      return new Promise((resolve, reject) => {
+        if (this.form.parser === 'baidu') {
+          const point = [Number(lng), Number(lat)];
+
+          this.$baiduGeo.getLocation(
+            new BMapGL.Point(...point),
+            function (res) {
+              if (res) {
+                resolve(res.address);
+              }
+
+              reject(new Error('根据经纬度查询地址失败'));
+            }
+          );
+        }
+
+        if (this.form.parser === 'gaode') {
+          const self = this;
+          AMap.plugin('AMap.Geocoder', function () {
+            const point = [lng, lat];
+
+            self.$gaodeGeo.getAddress(point, function (status, result) {
+              if (status === 'complete' && result.info === 'OK') {
+                // result为对应的地理位置详细信息
+                resolve(result.regeocode.formattedAddress);
+              }
+
+              reject(new Error('根据经纬度查询地址失败'));
+            });
+          });
+        }
       });
     },
   },
@@ -208,7 +258,7 @@ export default {
 
 <style lang="scss" scoped>
 .home {
-  @apply w-full h-full flex flex-col;
+  @apply w-full h-full flex flex-col overflow-hidden;
 
   &__header {
     @apply flex justify-center items-center bg-black text-white text-center text-2xl;
@@ -221,8 +271,9 @@ export default {
   }
 
   &__content {
-    @apply flex-1 w-1/2 mx-auto mt-10;
-    min-width: 500px;
+    @apply flex-1 w-full mx-auto mt-10 overflow-auto;
+    padding-left: 25%;
+    padding-right: 25%;
 
     .input,
     .output {
@@ -234,13 +285,7 @@ export default {
 
       &__textarea {
         flex: 1;
-        min-height: 200px;
       }
-    }
-
-    .btn {
-      align-self: flex-start;
-      margin-left: 20px;
     }
 
     .output {
@@ -250,6 +295,11 @@ export default {
 
   &__footer {
     @apply h-8 flex justify-center items-center bg-black text-white;
+  }
+
+  .btn__wrapper {
+    width: 90px;
+    @apply self-start flex justify-end ml-5;
   }
 }
 </style>
