@@ -30,12 +30,13 @@ jobs:
       - uses: actions/download-artifact@v3
         with:
           name: ll-to-address
+          path: dist
       - name: Display structure of downloaded files
         run: ls -R
       - uses: JamesIves/github-pages-deploy-action@v4.3.0
         with:
           branch: gh-pages
-          folder: ll-to-address
+          folder: dist
           
   deploy_to_my_blog:
     name: Deploy to My Blog
@@ -46,6 +47,7 @@ jobs:
       - uses: actions/download-artifact@v3
         with:
           name: ll-to-address
+          path: dist
       - name: ssh deploy
         uses: easingthemes/ssh-deploy@v2.2.11
         env:
@@ -53,5 +55,5 @@ jobs:
           REMOTE_HOST: ${{ secrets.REMOTE_HOST }}
           REMOTE_USER: ${{ secrets.REMOTE_USER }}
           ARGS: '-avzr --delete'
-          SOURCE: 'll-to-address/'
+          SOURCE: 'dist/'
           TARGET: ${{ secrets.REMOTE_TARGET }}
