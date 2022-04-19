@@ -1,0 +1,45 @@
+name: Node CI
+
+on:
+  pull_request:
+    branches: [ master ]
+
+jobs:
+  build:
+    name: build
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v3
+      - uses: actions/setup-node@v3
+        with:
+          node-version: 14
+      - run: npm ci
+      - run: npm run build
+
+  deploy_to_gh_pages:
+    name: Deploy to GitHub Pages
+    needs: build
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: JamesIves/github-pages-deploy-action@v4.3.0
+        with:
+          branch: gh-pages
+          folder: dist
+          
+  deploy_to_my_blog:
+    name: Deploy to My Blog
+    needs: build
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: ssh deploy
+        uses: easingthemes/ssh-deploy@v2.2.11
+        env:
+          SSH_PRIVATE_KEY: ${{ secrets.SERVER_SSH_KEY }}
+          REMOTE_HOST: ${{ secrets.REMOTE_HOST }}
+          REMOTE_USER: ${{ secrets.REMOTE_USER }}
+          ARGS: '-avzr --delete'
+          SOURCE: 'dist/'
+          TARGET: ${{ secrets.REMOTE_TARGET }}

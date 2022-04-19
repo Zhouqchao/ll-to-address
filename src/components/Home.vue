@@ -80,7 +80,7 @@
       </div>
     </div>
 
-    <div class="home__footer">©2022&nbsp;玛尔斯通&nbsp;&nbsp;</div>
+    <div class="home__footer">©2022&nbsp;|&nbsp;玛尔斯通&nbsp;&nbsp;</div>
   </div>
 </template>
 
@@ -294,7 +294,7 @@ export default {
   }
 
   &__footer {
-    @apply h-8 flex justify-center items-center bg-black text-white;
+    @apply h-12 flex justify-center items-center bg-black text-white;
   }
 
   .btn__wrapper {
