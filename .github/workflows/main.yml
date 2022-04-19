@@ -33,7 +33,7 @@ jobs:
       - uses: JamesIves/github-pages-deploy-action@v4.3.0
         with:
           branch: gh-pages
-          folder: dist
+          folder: ll-to-address
           
   deploy_to_my_blog:
     name: Deploy to My Blog
@@ -51,5 +51,5 @@ jobs:
           REMOTE_HOST: ${{ secrets.REMOTE_HOST }}
           REMOTE_USER: ${{ secrets.REMOTE_USER }}
           ARGS: '-avzr --delete'
-          SOURCE: 'dist/'
+          SOURCE: 'll-to-address/'
           TARGET: ${{ secrets.REMOTE_TARGET }}
