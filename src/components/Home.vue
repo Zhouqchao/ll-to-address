@@ -44,6 +44,13 @@
               </el-button>
             </div>
           </div>
+          <el-alert
+            class="select-info"
+            type="warning"
+            description="百度地图支持全球逆地理编码，高德地图只支持国内逆地理编码"
+            show-icon
+          >
+          </el-alert>
         </el-form-item>
       </el-form>
 
@@ -119,7 +126,7 @@ export default {
 
     return {
       form: {
-        parser: 'gaode',
+        parser: 'baidu',
         inputStr: '',
       },
       formRules: {
@@ -144,14 +151,14 @@ export default {
       },
       parsers: [
         {
-          label: '高德地图',
-          value: 'gaode',
-          icon: require('@/assets/parser-gaode.png'),
-        },
-        {
           label: '百度地图',
           value: 'baidu',
           icon: require('@/assets/parser-baidu.png'),
+        },
+        {
+          label: '高德地图',
+          value: 'gaode',
+          icon: require('@/assets/parser-gaode.png'),
         },
       ],
       addressList: [],
@@ -290,6 +297,10 @@ export default {
 
     .output {
       margin-top: 50px;
+    }
+
+    .select-info {
+      margin-top: 8px !important;
     }
   }
 
