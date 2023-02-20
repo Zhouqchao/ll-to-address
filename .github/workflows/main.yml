@@ -25,6 +25,9 @@ jobs:
     name: Deploy to GitHub Pages
     needs: build
     runs-on: ubuntu-latest
+    permissions:
+      id-token: write
+      contents: read  # <--- allows to read repo
 
     steps:
       - uses: actions/download-artifact@v3
