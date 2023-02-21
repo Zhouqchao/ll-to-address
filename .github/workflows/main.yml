@@ -5,12 +5,11 @@ on:
     branches: [ master ]
 
 permissions:
-  id-token: write
   contents: read  # <--- allows to read repo
 
 jobs:
-  build:
-    name: build
+  build-and-deploy-to-gh-pages:
+    name: Build and Deploy to GitHub Pages
     runs-on: ubuntu-latest
 
     steps:
@@ -18,38 +17,23 @@ jobs:
       - uses: actions/setup-node@v3
         with:
           node-version: 14
-      - run: npm ci
-      - run: npm run build
-      - uses: actions/upload-artifact@v3
-        with:
-          name: ll-to-address
-          path: dist
-
-  deploy_to_gh_pages:
-    name: Deploy to GitHub Pages
-    needs: build
-    runs-on: ubuntu-latest
-
-    steps:
-      - uses: actions/download-artifact@v3
-        with:
-          name: ll-to-address
-          path: dist
-      - name: Display structure of downloaded files
-        run: ls -R
-        
-      - name: Checkout
-        uses: actions/checkout@v3 
-      
-      - name: Configure git to trust the workspace despite the different owner
-        run: git config --global --add safe.directory "$GITHUB_WORKSPACE"
           
+      - name: Install and Build
+        run: npm ci
+        run: npm run build
+      
       - name:  Deploy to GitHub Pages
         uses: JamesIves/github-pages-deploy-action@v4.3.0
         with:
           token: ${{secrets.ACCESS_TOKEN}}
           branch: gh-pages
           folder: dist
+          
+      - name: Upload Artifact
+        uses: actions/upload-artifact@v3
+        with:
+          name: ll-to-address
+          path: dist
           
   deploy_to_my_blog:
     name: Deploy to My Blog
