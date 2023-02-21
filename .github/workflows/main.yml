@@ -36,7 +36,7 @@ jobs:
           
   deploy_to_my_blog:
     name: Deploy to My Blog
-    needs: build
+    needs: build-and-deploy-to-gh-pages
     runs-on: ubuntu-latest
 
     steps:
