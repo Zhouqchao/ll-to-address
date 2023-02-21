@@ -18,9 +18,8 @@ jobs:
         with:
           node-version: 14
           
-      - name: Install and Build
-        run: npm ci
-        run: npm run build
+      - run: npm ci
+      - run: npm run build
       
       - name:  Deploy to GitHub Pages
         uses: JamesIves/github-pages-deploy-action@v4.3.0
